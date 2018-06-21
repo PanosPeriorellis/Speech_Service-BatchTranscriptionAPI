@@ -1,8 +1,10 @@
 ﻿namespace CrisClient
 {
+    using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using System.Net.Http;
     using System.Net.Http.Headers;
     using System.Threading.Tasks;
@@ -125,11 +127,11 @@
             throw new InvalidOperationException("Exceeded maximum number of retries for getting a token.");
         }
 
-        private static Uri GetLocationFromPostResponse(HttpResponseMessage response)
+        private static async Task<Uri> GetLocationFromPostResponseAsync(HttpResponseMessage response)
         {
             if (!response.IsSuccessStatusCode)
             {
-                throw new NotImplementedException();
+                throw await CreateExceptionAsync(response).ConfigureAwait(false);
             }
 
             IEnumerable<string> headerValues;
@@ -148,7 +150,7 @@
         {
             using (var response = await this.client.PostAsJsonAsync(path, payload).ConfigureAwait(false))
             {
-                return GetLocationFromPostResponse(response);
+                return await GetLocationFromPostResponseAsync(response).ConfigureAwait(false);
             }
         }
 
@@ -166,6 +168,36 @@
                 }
 
                 throw new NotImplementedException();
+            }
+        }
+
+        private static async Task<FailedHttpClientRequestException> CreateExceptionAsync(HttpResponseMessage response)
+        {
+            switch (response.StatusCode)
+            {
+                case HttpStatusCode.Forbidden:
+                    return new FailedHttpClientRequestException(response.StatusCode, "No permission to access this resource.");
+                case HttpStatusCode.Unauthorized:
+                    return new FailedHttpClientRequestException(response.StatusCode, "Not authorized to see the resource.");
+                case HttpStatusCode.NotFound:
+                    return new FailedHttpClientRequestException(response.StatusCode, "The resource could not be found.");
+                case HttpStatusCode.UnsupportedMediaType:
+                    return new FailedHttpClientRequestException(response.StatusCode, "The file type isn't supported.");
+                case HttpStatusCode.BadRequest:
+                    {
+                        var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        var shape = new { Message = string.Empty };
+                        var result = JsonConvert.DeserializeAnonymousType(content, shape);
+                        if (result != null && !string.IsNullOrEmpty(result.Message))
+                        {
+                            return new FailedHttpClientRequestException(response.StatusCode, result.Message);
+                        }
+
+                        return new FailedHttpClientRequestException(response.StatusCode, response.ReasonPhrase);
+                    }
+
+                default:
+                    return new FailedHttpClientRequestException(response.StatusCode, response.ReasonPhrase);
             }
         }
     }

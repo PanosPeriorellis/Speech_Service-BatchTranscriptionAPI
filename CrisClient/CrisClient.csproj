@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FailedHttpClientRequestException.cs" />
     <Compile Include="CrisClient.cs" />
     <Compile Include="ModelIdentity.cs" />
     <Compile Include="Program.cs" />
