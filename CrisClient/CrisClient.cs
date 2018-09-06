@@ -22,7 +22,7 @@
         private CrisClient(HttpClient client)
         {
             this.client = client;
-            speechToTextBasePath = "api/speechtotext/v1.0/";
+            speechToTextBasePath = "api/speechtotext/v2.0-beta1/";
         }
 
         public static async Task<CrisClient> CreateApiV1ClientAsync(string username, string key, string hostName, int port)
@@ -34,6 +34,17 @@
             var tokenProviderPath = "/oauth/ctoken";
             var clientToken = await CreateClientTokenAsync(client, hostName, port, tokenProviderPath, username, key).ConfigureAwait(false);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", clientToken.AccessToken);
+
+            return new CrisClient(client);
+        }
+
+        public static CrisClient CreateApiV2Client(string key, string hostName, int port)
+        {
+            var client = new HttpClient();
+            client.Timeout = TimeSpan.FromMinutes(25);
+            client.BaseAddress = new UriBuilder(Uri.UriSchemeHttps, hostName, port).Uri;
+
+            client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", key);
 
             return new CrisClient(client);
         }
@@ -50,20 +61,20 @@
             return this.GetAsync<Transcription>(path);
         }
 
-        public Task<Uri> PostTranscriptionAsync(string locale, string subscriptionKey, Uri recordingsUrl)
+        public Task<Uri> PostTranscriptionAsync(string name, string description, string locale, Uri recordingsUrl)
         {
             var path = $"{this.speechToTextBasePath}Transcriptions/";
-            var transcriptionDefinition = TranscriptionDefinition.Create(locale, subscriptionKey, recordingsUrl);
+            var transcriptionDefinition = TranscriptionDefinition.Create(name, description, locale, recordingsUrl);
 
             return this.PostAsJsonAsync<TranscriptionDefinition>(path, transcriptionDefinition);
         }
 
-        public Task<Uri> PostTranscriptionAsync(string locale, string subscriptionKey, Uri recordingsUrl, IEnumerable<Guid> modelIds)
+        public Task<Uri> PostTranscriptionAsync(string name, string description, string locale, Uri recordingsUrl, IEnumerable<Guid> modelIds)
         {
             var models = modelIds.Select(m => ModelIdentity.Create(m)).ToList();
 
             var path = $"{this.speechToTextBasePath}Transcriptions/";
-            var transcriptionDefinition = TranscriptionDefinition.Create(locale, subscriptionKey, recordingsUrl, models);
+            var transcriptionDefinition = TranscriptionDefinition.Create(name, description, locale, recordingsUrl, models);
 
             return this.PostAsJsonAsync<TranscriptionDefinition>(path, transcriptionDefinition);
         }

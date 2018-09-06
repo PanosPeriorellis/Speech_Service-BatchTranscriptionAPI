@@ -9,23 +9,28 @@ namespace CrisClient
 
     public sealed class TranscriptionDefinition
     {
-        private TranscriptionDefinition(string locale, string subscriptionKey, Uri recordingsUrl)
+        private TranscriptionDefinition(string name, string description, string locale, Uri recordingsUrl)
         {
-            this.SubscriptionKey = subscriptionKey;
+            this.Name = name;
+            this.Description = description;
             this.RecordingsUrl = recordingsUrl;
             this.Locale = locale;
         }
 
-        private TranscriptionDefinition(string locale, string subscriptionKey, Uri recordingsUrl, IEnumerable<ModelIdentity> models)
+        private TranscriptionDefinition(string name, string description, string locale, Uri recordingsUrl, IEnumerable<ModelIdentity> models)
         {
-            this.SubscriptionKey = subscriptionKey;
+            this.Name = name;
+            this.Description = description;
             this.RecordingsUrl = recordingsUrl;
             this.Locale = locale;
             this.Models = models;
         }
 
         /// <inheritdoc />
-        public string SubscriptionKey { get; set; }
+        public string Name { get; set; }
+
+        /// <inheritdoc />
+        public string Description { get; set; }
 
         /// <inheritdoc />
         public Uri RecordingsUrl { get; set; }
@@ -35,20 +40,22 @@ namespace CrisClient
         public IEnumerable<ModelIdentity> Models { get; set; }
 
         public static TranscriptionDefinition Create(
+            string name,
+            string description,
             string locale,
-            string subscriptionKey,
             Uri recordingsUrl)
         {
-            return new TranscriptionDefinition(locale, subscriptionKey, recordingsUrl, null);
+            return new TranscriptionDefinition(name, description, locale, recordingsUrl, null);
         }
 
         public static TranscriptionDefinition Create(
+            string name,
+            string description,
             string locale,
-            string subscriptionKey,
             Uri recordingsUrl,
             IEnumerable<ModelIdentity> models)
         {
-            return new TranscriptionDefinition(locale, subscriptionKey, recordingsUrl, models);
+            return new TranscriptionDefinition(name, description, locale, recordingsUrl, models);
         }
     }
 }

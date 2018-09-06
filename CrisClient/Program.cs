@@ -9,24 +9,22 @@ namespace CrisClient
 {
     class Program
     {
-        // authentication constants
-        private const string UserName = "the MSA you used to login to customspeech.ai portal";
-
-        // internal api key
-        private const string ApiKey = "<the API key you generated at customspeech.ai portal>";
-        
         // internal sub key
         private const string SubscriptionKey = "<your Speech[Preview] subscription key>";
 
         private const string HostName = "cris.ai";
         private const int Port = 443;
 
+        //name and description
+        private const string Name = "Simple transcription";
+        private const string Description = "Simple transcription description";
+
         // recordings and locale
         private const string Locale = "en-US";
         private const string RecordingsBlobUri = "<URI pointing to an audio file stored Azure blob>";
 
         // adapted model Ids
-        private static Guid AdaptedAcousticId = new Guid("<id of the custom acoustic model");
+        private static Guid AdaptedAcousticId = new Guid("<id of the custom acoustic model>");
         private static Guid AdaptedLanguageId = new Guid("<ID of the custom language model>");
 
         static void Main(string[] args)
@@ -39,9 +37,9 @@ namespace CrisClient
             Console.WriteLine("Starting transcriptions client...");
 
             // create the client object and authenticate
-            var client = await CrisClient.CreateApiV1ClientAsync(UserName, ApiKey, HostName, Port).ConfigureAwait(false);
+            var client = CrisClient.CreateApiV2Client(SubscriptionKey, HostName, Port);
 
-            // get all transcriptions for the user
+            // get all transcriptions for the subscription
             var transcriptions = await client.GetTranscriptionsAsync().ConfigureAwait(false);
 
             Console.WriteLine("Deleting all existing completed transcriptions.");
@@ -53,10 +51,10 @@ namespace CrisClient
             }
 
             Console.WriteLine("Creating transcriptions.");            
-            var transcriptionLocation = await client.PostTranscriptionAsync(Locale, SubscriptionKey, new Uri(RecordingsBlobUri), new[] { AdaptedAcousticId, AdaptedLanguageId }).ConfigureAwait(false);
+            var transcriptionLocation = await client.PostTranscriptionAsync(Name, Description, Locale, new Uri(RecordingsBlobUri), new[] { AdaptedAcousticId, AdaptedLanguageId }).ConfigureAwait(false);
 
             // if you want to use baseline models then simply comment out the above line use the one below
-            //var transcriptionLocation = await client.PostTranscriptionAsync(Locale, SubscriptionKey, new Uri(RecordingsBlobUri)).ConfigureAwait(false);
+            //var transcriptionLocation = await client.PostTranscriptionAsync(Name, Description, Locale, new Uri(RecordingsBlobUri)).ConfigureAwait(false);
 
             // get the transcription Id from the location URI
             var createdTranscriptions = new List<Guid>();
@@ -65,7 +63,7 @@ namespace CrisClient
             Console.WriteLine("Checking status.");
             // check for the status of our transcriptions every 30 sec. (can also be 1, 2, 5 min depending on usage)
             int completed = 0, running = 0, notStarted = 0;
-            while (completed < 2)
+            while (completed < 1)
             {
                 // get all transcriptions for the user
                 transcriptions = await client.GetTranscriptionsAsync().ConfigureAwait(false);
