@@ -22,7 +22,7 @@
         private CrisClient(HttpClient client)
         {
             this.client = client;
-            speechToTextBasePath = "api/speechtotext/v2.0-beta1/";
+            speechToTextBasePath = "api/speechtotext/v2.0/";
         }
 
         public static async Task<CrisClient> CreateApiV1ClientAsync(string username, string key, string hostName, int port)
